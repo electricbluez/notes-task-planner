@@ -729,6 +729,78 @@
             }
         }
 
+        /* Edit form styles */
+        .edit-form {
+            margin-bottom: 12px;
+        }
+
+        .edit-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 12px;
+        }
+
+        .edit-textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .edit-tags {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .edit-tags:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .save-btn {
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .cancel-btn {
+            padding: 6px 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .cancel-btn:hover {
+            background: #545b62;
+        }
+
         /* Hidden class */
         .hidden {
             display: none !important;
@@ -1004,6 +1076,9 @@
         window.toggleTask = toggleTask;
         window.toggleArchive = toggleArchive;
         window.deleteItem = deleteItem;
+        window.editNote = editNote;
+        window.saveEdit = saveEdit;
+        window.cancelEdit = cancelEdit;
         window.archiveOldNotes = archiveOldNotes;
         window.archiveCompletedTasks = archiveCompletedTasks;
         window.toggleNotesView = toggleNotesView;
@@ -1226,6 +1301,71 @@
             renderAll();
         }
 
+        function editNote(id) {
+            const note = data.notes.find(n => n.id === id);
+            if (!note || note.archived) return;
+
+            const noteCard = document.querySelector(`[data-note-id="${id}"]`);
+            const contentDiv = noteCard.querySelector('.item-content');
+            const tagsDiv = noteCard.querySelector('.item-tags');
+            const actionsDiv = noteCard.querySelector('.item-actions');
+
+            // Store original content
+            const originalText = note.text;
+            const originalTags = note.tags || [];
+
+            // Create edit form
+            const editForm = document.createElement('div');
+            editForm.className = 'edit-form';
+            editForm.innerHTML = `
+                <textarea class="edit-textarea">${escapeHtml(originalText)}</textarea>
+                <input type="text" class="edit-tags" placeholder="Tags (comma-separated)" 
+                       value="${originalTags.join(', ')}">
+                <div class="edit-actions">
+                    <button class="save-btn" onclick="saveEdit(${id})">Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit(${id})">Cancel</button>
+                </div>
+            `;
+
+            // Replace content with edit form
+            contentDiv.replaceWith(editForm);
+            if (tagsDiv) tagsDiv.style.display = 'none';
+            actionsDiv.style.display = 'none';
+
+            // Focus on textarea
+            editForm.querySelector('.edit-textarea').focus();
+        }
+
+        function saveEdit(id) {
+            const note = data.notes.find(n => n.id === id);
+            if (!note) return;
+
+            const noteCard = document.querySelector(`[data-note-id="${id}"]`);
+            const editForm = noteCard.querySelector('.edit-form');
+            const textarea = editForm.querySelector('.edit-textarea');
+            const tagsInput = editForm.querySelector('.edit-tags');
+
+            const newText = textarea.value.trim();
+            const newTagsText = tagsInput.value.trim();
+            const newTags = newTagsText ? newTagsText.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+            if (newText) {
+                note.text = newText;
+                note.tags = newTags;
+                note.lastModified = new Date().toISOString();
+                
+                saveData();
+                updateTagFilter();
+                renderNotes();
+            } else {
+                alert('Note content cannot be empty');
+            }
+        }
+
+        function cancelEdit(id) {
+            renderNotes(); // This will restore the original view
+        }
+
         function archiveOldNotes() {
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -1305,7 +1445,7 @@
             }
             
             container.innerHTML = filteredNotes.map(note => `
-                <div class="item-card ${note.archived ? 'archived' : ''}">
+                <div class="item-card ${note.archived ? 'archived' : ''}" data-note-id="${note.id}">
                     <div class="item-content">${escapeHtml(note.text)}</div>
                     ${note.tags && note.tags.length > 0 ? `
                         <div class="item-tags">
@@ -1313,8 +1453,14 @@
                         </div>
                     ` : ''}
                     <div class="item-footer">
-                        <div class="item-date">${formatDate(note.date)}</div>
+                        <div class="item-date">
+                            ${formatDate(note.date)}
+                            ${note.lastModified ? ` (edited ${formatDate(note.lastModified)})` : ''}
+                        </div>
                         <div class="item-actions">
+                            ${!note.archived ? `
+                                <button class="action-btn" onclick="editNote(${note.id})">Edit</button>
+                            ` : ''}
                             <button class="action-btn" onclick="toggleArchive('notes', ${note.id})">
                                 ${note.archived ? 'Unarchive' : 'Archive'}
                             </button>
