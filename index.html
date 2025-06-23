@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes & Task Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #007bff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #28a745;
+            font-size: 12px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+        }
+
+        .sync-status.error .sync-dot {
+            background: #dc3545;
+        }
+
+        .sync-status.error {
+            color: #dc3545;
+        }
+
+        .sign-out-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        .sign-out-btn:hover {
+            color: #495057;
+        }
+
+        /* Auth Section */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 48px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-icon {
+            width: 64px;
+            height: 64px;
+            background: #007bff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: white;
+            font-size: 24px;
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .auth-subtitle {
+            color: #6c757d;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .auth-btn:hover {
+            background: #0056b3;
+        }
+
+        .auth-footer {
+            margin-top: 24px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 32px;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 16px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            color: #007bff;
+            background: white;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #007bff;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .tab-icon {
+            font-size: 18px;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            min-height: 600px;
+        }
+
+        .tab-pane {
+            display: none;
+            padding: 32px;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Form Sections */
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #2c3e50;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: end;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .text-area {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .primary-btn {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-btn:hover {
+            background: #0056b3;
+        }
+
+        .secondary-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .secondary-btn:hover {
+            background: #545b62;
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .view-toggle {
+            display: flex;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Items List */
+        .items-list {
+            space-y: 12px;
+        }
+
+        .item-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .item-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+        }
+
+        .item-content {
+            font-size: 14px;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .item-footer {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .item-date {
+            flex: 1;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #e9ecef;
+        }
+
+        .action-btn.danger:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        /* Task specific styles */
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .task-checkbox {
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-item.completed .item-content {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* Reminder specific styles */
+        .reminder-due-today {
+            border-left: 4px solid #ffc107;
+            background: #fff8e1;
+        }
+
+        .reminder-overdue {
+            border-left: 4px solid #dc3545;
+            background: #fff5f5;
+        }
+
+        .due-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        /* Archived items */
+        .item-card.archived {
+            opacity: 0.7;
+            border-left: 4px solid #6c757d;
+        }
+
+        /* Empty states */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 24px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: #495057;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #495057;
+        }
+
+        .date-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .tag-filters {
+            margin-bottom: 16px;
+        }
+
+        .available-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .filter-tag {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .filter-tag:hover {
+            border-color: #007bff;
+        }
+
+        .filter-tag.selected {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+        }
+
+        .selected-tag {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .remove-tag {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .report-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 16px;
+            }
+            
+            .nav-tab {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            .tab-pane {
+                padding: 24px 16px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+            }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Section -->
+    <div id="authSection" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-icon">📋</div>
+            <h1 class="auth-title">Sign In</h1>
+            <p class="auth-subtitle">Access your productivity workspace</p>
+            
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="emailInput" class="form-input" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="passwordInput" class="form-input" placeholder="Enter your password">
+            </div>
+            
+            <button onclick="signIn()" class="auth-btn">Sign In</button>
+            
+            <p class="auth-footer">
+                Your data is securely stored and only accessible by authorized users.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appContent" class="hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">📋</div>
+                Notes & Task Planner
+            </div>
+            <div class="user-info">
+                <div class="sync-status" id="syncStatus">
+                    <div class="sync-dot"></div>
+                    <span>Synced</span>
+                </div>
+                <span id="userEmail">test@example.com</span>
+                <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-container">
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" onclick="switchTab('notes')" id="notesTab">
+                    <span class="tab-icon">📝</span>
+                    Notes
+                </button>
+                <button class="nav-tab" onclick="switchTab('reminders')" id="remindersTab">
+                    <span class="tab-icon">⏰</span>
+                    Reminders
+                </button>
+                <button class="nav-tab" onclick="switchTab('tasks')" id="tasksTab">
+                    <span class="tab-icon">✅</span>
+                    Tasks
+                </button>
+                <button class="nav-tab" onclick="openReportsModal()" id="reportsTab">
+                    <span class="tab-icon">📊</span>
+                    Reports
+                </button>
+            </nav>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Notes Tab -->
+                <div class="tab-pane active" id="notesPane">
+                    <h2 class="section-title">Add New Note</h2>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Note Content</label>
+                        <textarea id="noteInput" class="text-input text-area" 
+                                placeholder="Write your note here... (Ctrl+Enter to save)"></textarea>
+                    </div>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label class="input-label">Tags</label>
+                            <input type="text" id="noteTagsInput" class="text-input" 
+                                   placeholder="Enter tags separated by commas (e.g., work, important, meeting)">
+                        </div>
+                        <button onclick="addNote()" class="primary-btn">
+                            <span>+</span>
+                            Add Note
+                        </button>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" onclick="toggleNotesView('active')" id="notesActiveBtn">Active</button>
+                            <button class="toggle-btn" onclick="toggleNotesView('archived')" id="notesArchivedBtn">Archived</button>
+                        </div>
+                        
+                        <select id="tagFilter" class="filter-select" onchange="renderNotes()">
+                            <option value="">All tags</option>
+                        </select>
+                        
+                        <button onclick="archiveOldNotes()" class="secondary-btn">Archive Old Notes</button>
+                    </div>
+
+                    <div id="notesList" class="items-list">
+                        <!-- Notes will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Reminders Tab -->
+                <div class="tab-pane" id="remindersPane">
+                    <h2 class="section-title">Add New Reminder</h2>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label class="input-label">Reminder</label>
+                            <input type="text" id="reminderText" class="text-input" 
+                                   placeholder="What do you need to be reminded about?">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Due Date</label>
+                            <input type="date" id="reminderDate" class="text-input">
+                        </div>
+                        <button onclick="addReminder()" class="primary-btn">
+                            <span>⏰</span>
+                            Add Reminder
+                        </button>
+                    </div>
+
+                    <div id="remindersList" class="items-list">
+                        <!-- Reminders will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Tasks Tab -->
+                <div class="tab-pane" id="tasksPane">
+                    <h2 class="section-title">Add New Task</h2>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <input type="text" id="taskInput" class="text-input" 
+                                   placeholder="What needs to be done? (Press Enter to add)">
+                        </div>
+                        <button onclick="addTask()" class="primary-btn">
+                            <span>+</span>
+                            Add Task
+                        </button>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" onclick="toggleTasksView('active')" id="tasksActiveBtn">Active</button>
+                            <button class="toggle-btn" onclick="toggleTasksView('archived')" id="tasksArchivedBtn">Archived</button>
+                        </div>
+                        
+                        <button onclick="archiveCompletedTasks()" class="secondary-btn">Archive Completed</button>
+                    </div>
+
+                    <div id="tasksList" class="items-list">
+                        <!-- Tasks will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div id="reportsModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <span>📊</span>
+                    Productivity Report
+                </h3>
+                <button class="modal-close" onclick="closeReportsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4 class="modal-section-title">Date Range</h4>
+                    <div class="date-row">
+                        <div class="input-group">
+                            <label class="input-label">Start Date</label>
+                            <input type="date" id="reportStartDate" class="text-input">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">End Date</label>
+                            <input type="date" id="reportEndDate" class="text-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h4 class="modal-section-title">Tag Filters</h4>
+                    <div class="available-tags" id="availableTagsContainer">
+                        <!-- Available tags will be rendered here -->
+                    </div>
+                    <div class="selected-tags" id="selectedTagsContainer">
+                        <!-- Selected tags will be rendered here -->
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button onclick="generateReport()" class="primary-btn">
+                        <span>📋</span>
+                        Generate Report
+                    </button>
+                    <button onclick="copyReport()" class="secondary-btn">Copy to Clipboard</button>
+                    <button onclick="clearReportTags()" class="secondary-btn">Clear Tag Filters</button>
+                </div>
+
+                <div id="reportOutput" class="report-output hidden">
+                    Generate a report to see the results here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBiq3fvCWrOU_TGeIWYH__WFbpuATjGls",
+            authDomain: "notes-task-planner.firebaseapp.com",
+            databaseURL: "https://notes-task-planner-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "notes-task-planner",
+            storageBucket: "notes-task-planner.firebasestorage.app",
+            messagingSenderId: "856686025461",
+            appId: "1:856686025461:web:b0b86368693a02f79bc3bc"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global state
+        let currentUser = null;
+        let unsubscribeData = null;
+        let currentTab = 'notes';
+        
+        // Data storage
+        let data = {
+            notes: [],
+            reminders: [],
+            tasks: []
+        };
+
+        // View state
+        let currentView = {
+            notes: 'active',
+            tasks: 'active'
+        };
+
+        // Report filtering state
+        let reportTags = new Set();
+
+        // Make functions global for onclick handlers
+        window.signIn = signIn;
+        window.signOut = signOut;
+        window.switchTab = switchTab;
+        window.addNote = addNote;
+        window.addReminder = addReminder;
+        window.addTask = addTask;
+        window.toggleTask = toggleTask;
+        window.toggleArchive = toggleArchive;
+        window.deleteItem = deleteItem;
+        window.archiveOldNotes = archiveOldNotes;
+        window.archiveCompletedTasks = archiveCompletedTasks;
+        window.toggleNotesView = toggleNotesView;
+        window.toggleTasksView = toggleTasksView;
+        window.openReportsModal = openReportsModal;
+        window.closeReportsModal = closeReportsModal;
+        window.generateReport = generateReport;
+        window.copyReport = copyReport;
+        window.clearReportTags = clearReportTags;
+        window.toggleReportTag = toggleReportTag;
+        window.removeReportTag = removeReportTag;
+
+        // Authentication functions
+        async function signIn() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            if (!email || !password) {
+                alert('Please enter both email and password');
+                return;
+            }
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showSyncStatus('Signed in successfully!');
+            } catch (error) {
+                alert('Error signing in: ' + error.message);
+            }
+        }
+
+        async function signOut() {
+            try {
+                if (unsubscribeData) {
+                    unsubscribeData();
+                    unsubscribeData = null;
+                }
+                await firebaseSignOut(auth);
+                showSyncStatus('Signed out');
+            } catch (error) {
+                alert('Error signing out: ' + error.message);
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Update tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Pane').classList.add('active');
+
+            currentTab = tabName;
+        }
+
+        // Data persistence functions
+        async function saveData() {
+            if (!currentUser) return;
+            
+            try {
+                await setDoc(doc(db, 'users', currentUser.uid), data);
+                showSyncStatus('Synced');
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showSyncStatus('Sync failed', true);
+            }
+        }
+
+        async function loadData() {
+            if (!currentUser) return;
+            
+            try {
+                const docRef = doc(db, 'users', currentUser.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const savedData = docSnap.data();
+                    data = {
+                        notes: savedData.notes || [],
+                        reminders: savedData.reminders || [],
+                        tasks: savedData.tasks || []
+                    };
+                } else {
+                    data = { notes: [], reminders: [], tasks: [] };
+                    await saveData();
+                }
+                
+                renderAll();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showSyncStatus('Load failed', true);
+            }
+        }
+
+        function setupRealtimeSync() {
+            if (!currentUser) return;
+            
+            const docRef = doc(db, 'users', currentUser.uid);
+            unsubscribeData = onSnapshot(docRef, (doc) => {
+                if (doc.exists()) {
+                    const savedData = doc.data();
+                    data = {
+                        notes: savedData.notes || [],
+                        reminders: savedData.reminders || [],
+                        tasks: savedData.tasks || []
+                    };
+                    renderAll();
+                }
+            });
+        }
+
+        function showSyncStatus(message = 'Synced', isError = false) {
+            const status = document.getElementById('syncStatus');
+            const dot = status.querySelector('.sync-dot');
+            const text = status.querySelector('span');
+            
+            text.textContent = message;
+            status.classList.toggle('error', isError);
+            
+            // Brief visibility pulse
+            status.style.opacity = '1';
+            setTimeout(() => {
+                if (message === 'Synced') {
+                    status.style.opacity = '0.7';
+                }
+            }, 2000);
+        }
+
+        // Core app functions
+        function addNote() {
+            const input = document.getElementById('noteInput');
+            const tagsInput = document.getElementById('noteTagsInput');
+            const text = input.value.trim();
+            const tagsText = tagsInput.value.trim();
+            
+            if (text) {
+                const tags = tagsText ? tagsText.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+                
+                data.notes.unshift({
+                    id: Date.now(),
+                    text: text,
+                    date: new Date().toISOString(),
+                    archived: false,
+                    tags: tags
+                });
+                input.value = '';
+                tagsInput.value = '';
+                saveData();
+                updateTagFilter();
+                renderNotes();
+            }
+        }
+
+        function addReminder() {
+            const textInput = document.getElementById('reminderText');
+            const dateInput = document.getElementById('reminderDate');
+            const text = textInput.value.trim();
+            const date = dateInput.value;
+            
+            if (text && date) {
+                data.reminders.push({
+                    id: Date.now(),
+                    text: text,
+                    date: date,
+                    created: new Date().toISOString()
+                });
+                textInput.value = '';
+                dateInput.value = new Date().toISOString().split('T')[0];
+                saveData();
+                renderReminders();
+            }
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                data.tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    created: new Date().toISOString(),
+                    completedDate: null,
+                    archived: false
+                });
+                input.value = '';
+                saveData();
+                renderTasks();
+            }
+        }
+
+        function toggleTask(id) {
+            const task = data.tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                task.completedDate = task.completed ? new Date().toISOString() : null;
+                saveData();
+                renderTasks();
+            }
+        }
+
+        function toggleArchive(type, id) {
+            const item = data[type].find(item => item.id === id);
+            if (item) {
+                item.archived = !item.archived;
+                saveData();
+                renderAll();
+            }
+        }
+
+        function deleteItem(type, id) {
+            data[type] = data[type].filter(item => item.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function archiveOldNotes() {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            let archived = 0;
+            data.notes.forEach(note => {
+                if (new Date(note.date) < thirtyDaysAgo && !note.archived) {
+                    note.archived = true;
+                    archived++;
+                }
+            });
+            
+            if (archived > 0) {
+                alert(`Archived ${archived} notes older than 30 days`);
+                saveData();
+                renderNotes();
+            } else {
+                alert('No notes older than 30 days found');
+            }
+        }
+
+        function archiveCompletedTasks() {
+            let archived = 0;
+            data.tasks.forEach(task => {
+                if (task.completed && !task.archived) {
+                    task.archived = true;
+                    archived++;
+                }
+            });
+            
+            if (archived > 0) {
+                alert(`Archived ${archived} completed tasks`);
+                saveData();
+                renderTasks();
+            } else {
+                alert('No completed tasks to archive');
+            }
+        }
+
+        function toggleNotesView(view) {
+            currentView.notes = view;
+            document.getElementById('notesActiveBtn').classList.toggle('active', view === 'active');
+            document.getElementById('notesArchivedBtn').classList.toggle('active', view === 'archived');
+            renderNotes();
+        }
+
+        function toggleTasksView(view) {
+            currentView.tasks = view;
+            document.getElementById('tasksActiveBtn').classList.toggle('active', view === 'active');
+            document.getElementById('tasksArchivedBtn').classList.toggle('active', view === 'archived');
+            renderTasks();
+        }
+
+        // Render functions
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            const showArchived = currentView.notes === 'archived';
+            const selectedTag = document.getElementById('tagFilter').value;
+            
+            let filteredNotes = data.notes.filter(note => note.archived === showArchived);
+            
+            if (selectedTag) {
+                filteredNotes = filteredNotes.filter(note => 
+                    note.tags && note.tags.includes(selectedTag)
+                );
+            }
+            
+            if (filteredNotes.length === 0) {
+                const filterText = selectedTag ? ` with tag "${selectedTag}"` : '';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <p>${showArchived ? 'No archived notes' : 'No active notes'}${filterText}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredNotes.map(note => `
+                <div class="item-card ${note.archived ? 'archived' : ''}">
+                    <div class="item-content">${escapeHtml(note.text)}</div>
+                    ${note.tags && note.tags.length > 0 ? `
+                        <div class="item-tags">
+                            ${note.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="item-footer">
+                        <div class="item-date">${formatDate(note.date)}</div>
+                        <div class="item-actions">
+                            <button class="action-btn" onclick="toggleArchive('notes', ${note.id})">
+                                ${note.archived ? 'Unarchive' : 'Archive'}
+                            </button>
+                            <button class="action-btn danger" onclick="deleteItem('notes', ${note.id})">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderReminders() {
+            const container = document.getElementById('remindersList');
+            const today = new Date().toDateString();
+            
+            if (data.reminders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⏰</div>
+                        <p>No reminders yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = data.reminders.map(reminder => {
+                const reminderDate = new Date(reminder.date);
+                const isOverdue = reminderDate < new Date() && reminderDate.toDateString() !== today;
+                const isToday = reminderDate.toDateString() === today;
+                
+                let cardClass = 'item-card';
+                let dueBadge = '';
+                
+                if (isOverdue) {
+                    cardClass += ' reminder-overdue';
+                }
+                if (isToday) {
+                    cardClass += ' reminder-due-today';
+                    dueBadge = '<div class="due-badge">Due Today</div>';
+                }
+                
+                return `
+                    <div class="${cardClass}">
+                        ${dueBadge}
+                        <div class="item-content">${escapeHtml(reminder.text)}</div>
+                        <div class="item-footer">
+                            <div class="item-date">Due: ${formatDate(reminder.date)}</div>
+                            <div class="item-actions">
+                                <button class="action-btn danger" onclick="deleteItem('reminders', ${reminder.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('tasksList');
+            const showArchived = currentView.tasks === 'archived';
+            const filteredTasks = data.tasks.filter(task => task.archived === showArchived);
+            const sortedTasks = [...filteredTasks].sort((a, b) => a.completed - b.completed);
+            
+            if (sortedTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <p>${showArchived ? 'No archived tasks' : 'No active tasks'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = sortedTasks.map(task => `
+                <div class="item-card task-item ${task.completed ? 'completed' : ''} ${task.archived ? 'archived' : ''}">
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                           onchange="toggleTask(${task.id})" ${showArchived ? 'disabled' : ''}>
+                    <div class="task-content">
+                        <div class="item-content">${escapeHtml(task.text)}</div>
+                        <div class="item-footer">
+                            <div class="item-date">
+                                ${task.completed ? 
+                                    `Completed: ${formatDate(task.completedDate)}` : 
+                                    `Created: ${formatDate(task.created)}`
+                                }
+                            </div>
+                            <div class="item-actions">
+                                <button class="action-btn" onclick="toggleArchive('tasks', ${task.id})">
+                                    ${task.archived ? 'Unarchive' : 'Archive'}
+                                </button>
+                                <button class="action-btn danger" onclick="deleteItem('tasks', ${task.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAll() {
+            updateTagFilter();
+            updateReportTags();
+            renderNotes();
+            renderReminders();
+            renderTasks();
+        }
+
+        function updateTagFilter() {
+            const tagFilter = document.getElementById('tagFilter');
+            const currentValue = tagFilter.value;
+            
+            const allTags = new Set();
+            data.notes.forEach(note => {
+                if (note.tags) {
+                    note.tags.forEach(tag => allTags.add(tag));
+                }
+            });
+            
+            tagFilter.innerHTML = '<option value="">All tags</option>';
+            Array.from(allTags).sort().forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                option.textContent = tag;
+                if (tag === currentValue) {
+                    option.selected = true;
+                }
+                tagFilter.appendChild(option);
+            });
+        }
+
+        // Reports functionality
+        function openReportsModal() {
+            document.getElementById('reportsModal').classList.remove('hidden');
+            updateReportTags();
+        }
+
+        function closeReportsModal() {
+            document.getElementById('reportsModal').classList.add('hidden');
+        }
+
+        function generateReport() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            
+            let filteredNotes = data.notes.filter(note => {
+                const noteDate = new Date(note.date);
+                return noteDate >= start && noteDate <= end;
+            });
+            
+            const filteredReminders = data.reminders.filter(reminder => {
+                const reminderDate = new Date(reminder.date);
+                return reminderDate >= start && reminderDate <= end;
+            });
+            
+            const filteredTasks = data.tasks.filter(task => {
+                const taskDate = new Date(task.completedDate || task.created);
+                return taskDate >= start && taskDate <= end;
+            });
+            
+            if (reportTags.size > 0) {
+                filteredNotes = filteredNotes.filter(note => {
+                    if (!note.tags || note.tags.length === 0) return false;
+                    return Array.from(reportTags).some(tag => note.tags.includes(tag));
+                });
+            }
+            
+            let report = `PRODUCTIVITY REPORT\n`;
+            report += `Period: ${formatDate(startDate)} to ${formatDate(endDate)}\n`;
+            if (reportTags.size > 0) {
+                report += `Filtered by tags: ${Array.from(reportTags).join(', ')}\n`;
+            }
+            report += `Generated: ${formatDate(new Date().toISOString())}\n\n`;
+            
+            report += `COMPLETED WORK:\n`;
+            report += `=================\n`;
+            if (filteredNotes.length > 0) {
+                filteredNotes.forEach(note => {
+                    report += `• ${note.text.replace(/\n/g, '\n  ')} (${formatDate(note.date)})`;
+                    if (note.tags && note.tags.length > 0) {
+                        report += ` [${note.tags.join(', ')}]`;
+                    }
+                    report += `\n`;
+                });
+            } else {
+                const tagText = reportTags.size > 0 ? ' matching the selected tags' : '';
+                report += `No notes recorded for this period${tagText}.\n`;
+            }
+            
+            report += `\nREMINDERS/DEADLINES:\n`;
+            report += `====================\n`;
+            if (filteredReminders.length > 0) {
+                filteredReminders.forEach(reminder => {
+                    report += `• ${reminder.text} (Due: ${formatDate(reminder.date)})\n`;
+                });
+            } else {
+                report += `No reminders for this period.\n`;
+            }
+            
+            report += `\nTASKS:\n`;
+            report += `======\n`;
+            const completedTasks = filteredTasks.filter(task => task.completed);
+            const pendingTasks = filteredTasks.filter(task => !task.completed);
+            
+            if (completedTasks.length > 0) {
+                report += `Completed:\n`;
+                completedTasks.forEach(task => {
+                    report += `✓ ${task.text} (${formatDate(task.completedDate)})\n`;
+                });
+            }
+            
+            if (pendingTasks.length > 0) {
+                report += `\nPending:\n`;
+                pendingTasks.forEach(task => {
+                    report += `○ ${task.text} (Created: ${formatDate(task.created)})\n`;
+                });
+            }
+            
+            if (completedTasks.length === 0 && pendingTasks.length === 0) {
+                report += `No tasks for this period.\n`;
+            }
+            
+            report += `\nSUMMARY:\n`;
+            report += `========\n`;
+            report += `Notes: ${filteredNotes.length}\n`;
+            report += `Reminders: ${filteredReminders.length}\n`;
+            report += `Completed Tasks: ${completedTasks.length}\n`;
+            report += `Pending Tasks: ${pendingTasks.length}\n`;
+            if (reportTags.size > 0) {
+                report += `Tag Filter Applied: ${Array.from(reportTags).join(', ')}\n`;
+            }
+            
+            document.getElementById('reportOutput').textContent = report;
+            document.getElementById('reportOutput').classList.remove('hidden');
+        }
+
+        function copyReport() {
+            const reportText = document.getElementById('reportOutput').textContent;
+            if (reportText) {
+                navigator.clipboard.writeText(reportText).then(() => {
+                    alert('Report copied to clipboard!');
+                });
+            }
+        }
+
+        function updateReportTags() {
+            const allTags = new Set();
+            data.notes.forEach(note => {
+                if (note.tags) {
+                    note.tags.forEach(tag => allTags.add(tag));
+                }
+            });
+            
+            const availableContainer = document.getElementById('availableTagsContainer');
+            const selectedContainer = document.getElementById('selectedTagsContainer');
+            
+            if (allTags.size === 0) {
+                availableContainer.innerHTML = '<p style="color: #6c757d; font-size: 14px;">No tags available</p>';
+            } else {
+                availableContainer.innerHTML = Array.from(allTags).sort().map(tag => `
+                    <button class="filter-tag ${reportTags.has(tag) ? 'selected' : ''}" onclick="toggleReportTag('${tag}')">
+                        ${escapeHtml(tag)}
+                    </button>
+                `).join('');
+            }
+            
+            if (reportTags.size === 0) {
+                selectedContainer.innerHTML = '<p style="color: #6c757d; font-size: 14px; margin: 8px;">Click tags above to add filters</p>';
+            } else {
+                selectedContainer.innerHTML = Array.from(reportTags).map(tag => `
+                    <div class="selected-tag">
+                        ${escapeHtml(tag)}
+                        <button class="remove-tag" onclick="removeReportTag('${tag}')" title="Remove filter">×</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleReportTag(tag) {
+            if (reportTags.has(tag)) {
+                reportTags.delete(tag);
+            } else {
+                reportTags.add(tag);
+            }
+            updateReportTags();
+        }
+
+        function removeReportTag(tag) {
+            reportTags.delete(tag);
+            updateReportTags();
+        }
+
+        function clearReportTags() {
+            reportTags.clear();
+            updateReportTags();
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setDefaultReportDates() {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 30);
+            
+            document.getElementById('reportStartDate').value = start.toISOString().split('T')[0];
+            document.getElementById('reportEndDate').value = end.toISOString().split('T')[0];
+        }
+
+        // Authentication state management
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            
+            if (user) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('appContent').classList.remove('hidden');
+                document.getElementById('userEmail').textContent = user.email;
+                
+                document.getElementById('emailInput').value = '';
+                document.getElementById('passwordInput').value = '';
+                
+                loadData();
+                setupRealtimeSync();
+                setDefaultReportDates();
+                document.getElementById('reminderDate').value = new Date().toISOString().split('T')[0];
+                
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('appContent').classList.add('hidden');
+                
+                if (unsubscribeData) {
+                    unsubscribeData();
+                    unsubscribeData = null;
+                }
+                data = { notes: [], reminders: [], tasks: [] };
+            }
+        });
+
+        // Keyboard shortcuts and event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keypress', function(e) {
+                if (e.target.id === 'noteInput' && e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    addNote();
+                }
+                
+                if (e.target.id === 'taskInput' && e.key === 'Enter') {
+                    e.preventDefault();
+                    addTask();
+                }
+                
+                if (e.target.id === 'reminderText' && e.key === 'Enter') {
+                    e.preventDefault();
+                    addReminder();
+                }
+                
+                if (e.target.id === 'noteTagsInput' && e.key === 'Enter') {
+                    e.preventDefault();
+                    addNote();
+                }
+                
+                if ((e.target.id === 'emailInput' || e.target.id === 'passwordInput') && e.key === 'Enter') {
+                    e.preventDefault();
+                    signIn();
+                }
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('reportsModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeReportsModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
