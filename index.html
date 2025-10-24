@@ -188,7 +188,7 @@
 
         /* Main Layout */
         .main-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 24px;
         }
@@ -308,6 +308,23 @@
             min-height: 120px;
         }
 
+        .select-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
         .primary-btn {
             padding: 12px 24px;
             background: #007bff;
@@ -321,6 +338,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
         }
 
         .primary-btn:hover {
@@ -340,6 +358,14 @@
 
         .secondary-btn:hover {
             background: #545b62;
+        }
+
+        .success-btn {
+            background: #28a745;
+        }
+
+        .success-btn:hover {
+            background: #218838;
         }
 
         /* Controls Bar */
@@ -430,7 +456,7 @@
 
         .item-footer {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             font-size: 12px;
             color: #6c757d;
@@ -465,25 +491,213 @@
             border-color: #dc3545;
         }
 
-        /* Task specific styles */
+        /* Task Groups */
+        .task-groups {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .task-group {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 200px;
+            transition: all 0.2s;
+        }
+
+        .task-group.drag-over {
+            border-color: #007bff;
+            background: #e3f2fd;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+        }
+
+        .task-group.no-group {
+            background: #fff8e1;
+            border-color: #ffc107;
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .group-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .task-group.no-group .group-title {
+            color: #856404;
+        }
+
+        .group-title-text {
+            flex: 1;
+        }
+
+        .group-title-input {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .group-title-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .group-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .group-action-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .group-action-btn:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        /* Task Items in Groups */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 60px;
+        }
+
         .task-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
             display: flex;
             align-items: flex-start;
-            gap: 12px;
+            gap: 10px;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+        }
+
+        .task-item.dragging {
+            opacity: 0.4;
+            cursor: grabbing;
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+
+        .task-drag-handle {
+            color: #adb5bd;
+            cursor: grab;
+            font-size: 16px;
+            padding: 0 4px;
+            user-select: none;
+        }
+
+        .task-drag-handle:active {
+            cursor: grabbing;
         }
 
         .task-checkbox {
             margin-top: 2px;
             cursor: pointer;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
         }
 
-        .task-content {
+        .task-text {
             flex: 1;
+            font-size: 14px;
+            word-wrap: break-word;
         }
 
-        .task-item.completed .item-content {
-            text-decoration: line-through;
-            opacity: 0.6;
+        .task-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .task-item:hover .task-actions {
+            opacity: 1;
+        }
+
+        .task-action-btn {
+            padding: 2px 6px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-action-btn:hover {
+            background: #e9ecef;
+        }
+
+        .task-action-btn.danger:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .empty-group {
+            text-align: center;
+            padding: 32px 16px;
+            color: #adb5bd;
+            font-size: 14px;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .empty-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
         }
 
         /* Reminder specific styles */
@@ -522,7 +736,7 @@
             color: #6c757d;
         }
 
-        .empty-icon {
+        .empty-state .empty-icon {
             font-size: 48px;
             margin-bottom: 16px;
             opacity: 0.5;
@@ -693,42 +907,6 @@
             margin-top: 24px;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 16px;
-            }
-            
-            .nav-tab {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-            
-            .tab-pane {
-                padding: 24px 16px;
-            }
-            
-            .input-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .controls-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .header {
-                padding: 12px 16px;
-            }
-            
-            .user-info {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 8px;
-            }
-        }
-
         /* Edit form styles */
         .edit-form {
             margin-bottom: 12px;
@@ -804,6 +982,46 @@
         /* Hidden class */
         .hidden {
             display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 16px;
+            }
+            
+            .nav-tab {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            .tab-pane {
+                padding: 24px 16px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+            }
+
+            .task-groups {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -946,8 +1164,15 @@
                     
                     <div class="input-row">
                         <div class="input-group">
+                            <label class="input-label">Task Description</label>
                             <input type="text" id="taskInput" class="text-input" 
                                    placeholder="What needs to be done? (Press Enter to add)">
+                        </div>
+                        <div class="input-group" style="max-width: 250px;">
+                            <label class="input-label">Add to Group</label>
+                            <select id="taskGroupSelect" class="select-input">
+                                <option value="">Ungrouped</option>
+                            </select>
                         </div>
                         <button onclick="addTask()" class="primary-btn">
                             <span>+</span>
@@ -961,11 +1186,12 @@
                             <button class="toggle-btn" onclick="toggleTasksView('archived')" id="tasksArchivedBtn">Archived</button>
                         </div>
                         
+                        <button onclick="showNewGroupPrompt()" class="secondary-btn success-btn">+ New Group</button>
                         <button onclick="archiveCompletedTasks()" class="secondary-btn">Archive Completed</button>
                     </div>
 
-                    <div id="tasksList" class="items-list">
-                        <!-- Tasks will be rendered here -->
+                    <div id="tasksList" class="task-groups">
+                        <!-- Task groups will be rendered here -->
                     </div>
                 </div>
             </div>
@@ -1049,12 +1275,14 @@
         let currentUser = null;
         let unsubscribeData = null;
         let currentTab = 'notes';
+        let draggedTask = null;
         
         // Data storage
         let data = {
             notes: [],
             reminders: [],
-            tasks: []
+            tasks: [],
+            taskGroups: []
         };
 
         // View state
@@ -1076,6 +1304,7 @@
         window.toggleTask = toggleTask;
         window.toggleArchive = toggleArchive;
         window.deleteItem = deleteItem;
+        window.deleteTask = deleteTask;
         window.editNote = editNote;
         window.saveEdit = saveEdit;
         window.cancelEdit = cancelEdit;
@@ -1090,6 +1319,11 @@
         window.clearReportTags = clearReportTags;
         window.toggleReportTag = toggleReportTag;
         window.removeReportTag = removeReportTag;
+        window.showNewGroupPrompt = showNewGroupPrompt;
+        window.deleteGroup = deleteGroup;
+        window.startEditGroupName = startEditGroupName;
+        window.saveGroupName = saveGroupName;
+        window.cancelEditGroupName = cancelEditGroupName;
 
         // Authentication functions
         async function signIn() {
@@ -1164,10 +1398,14 @@
                     data = {
                         notes: savedData.notes || [],
                         reminders: savedData.reminders || [],
-                        tasks: savedData.tasks || []
+                        tasks: savedData.tasks || [],
+                        taskGroups: savedData.taskGroups || []
                     };
+                    
+                    // Migrate existing tasks to have groupId if they don't
+                    migrateTaskData();
                 } else {
-                    data = { notes: [], reminders: [], tasks: [] };
+                    data = { notes: [], reminders: [], tasks: [], taskGroups: [] };
                     await saveData();
                 }
                 
@@ -1175,6 +1413,28 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 showSyncStatus('Load failed', true);
+            }
+        }
+
+        function migrateTaskData() {
+            let needsSave = false;
+            
+            // Add groupId to tasks that don't have it
+            data.tasks.forEach(task => {
+                if (!task.hasOwnProperty('groupId')) {
+                    task.groupId = null;
+                    needsSave = true;
+                }
+            });
+            
+            // Ensure taskGroups array exists
+            if (!data.taskGroups) {
+                data.taskGroups = [];
+                needsSave = true;
+            }
+            
+            if (needsSave) {
+                saveData();
             }
         }
 
@@ -1188,7 +1448,8 @@
                     data = {
                         notes: savedData.notes || [],
                         reminders: savedData.reminders || [],
-                        tasks: savedData.tasks || []
+                        tasks: savedData.tasks || [],
+                        taskGroups: savedData.taskGroups || []
                     };
                     renderAll();
                 }
@@ -1197,7 +1458,6 @@
 
         function showSyncStatus(message = 'Synced', isError = false) {
             const status = document.getElementById('syncStatus');
-            const dot = status.querySelector('.sync-dot');
             const text = status.querySelector('span');
             
             text.textContent = message;
@@ -1259,7 +1519,9 @@
 
         function addTask() {
             const input = document.getElementById('taskInput');
+            const groupSelect = document.getElementById('taskGroupSelect');
             const text = input.value.trim();
+            const groupId = groupSelect.value || null;
             
             if (text) {
                 data.tasks.push({
@@ -1268,9 +1530,11 @@
                     completed: false,
                     created: new Date().toISOString(),
                     completedDate: null,
-                    archived: false
+                    archived: false,
+                    groupId: groupId
                 });
                 input.value = '';
+                groupSelect.value = '';
                 saveData();
                 renderTasks();
             }
@@ -1299,6 +1563,12 @@
             data[type] = data[type].filter(item => item.id !== id);
             saveData();
             renderAll();
+        }
+
+        function deleteTask(id) {
+            data.tasks = data.tasks.filter(task => task.id !== id);
+            saveData();
+            renderTasks();
         }
 
         function editNote(id) {
@@ -1363,7 +1633,7 @@
         }
 
         function cancelEdit(id) {
-            renderNotes(); // This will restore the original view
+            renderNotes();
         }
 
         function archiveOldNotes() {
@@ -1417,6 +1687,191 @@
             document.getElementById('tasksActiveBtn').classList.toggle('active', view === 'active');
             document.getElementById('tasksArchivedBtn').classList.toggle('active', view === 'archived');
             renderTasks();
+        }
+
+        // Task Groups Management
+        function showNewGroupPrompt() {
+            const groupName = prompt('Enter group name:');
+            if (groupName && groupName.trim()) {
+                const emoji = prompt('Enter emoji for group (optional):', '📁');
+                createGroup(groupName.trim(), emoji || '📁');
+            }
+        }
+
+        function createGroup(name, emoji = '📁') {
+            const newGroup = {
+                id: Date.now(),
+                name: name,
+                emoji: emoji,
+                order: data.taskGroups.length
+            };
+            
+            data.taskGroups.push(newGroup);
+            saveData();
+            updateGroupSelect();
+            renderTasks();
+        }
+
+        function deleteGroup(groupId) {
+            const group = data.taskGroups.find(g => g.id === groupId);
+            if (!group) return;
+            
+            const tasksInGroup = data.tasks.filter(t => t.groupId === groupId);
+            
+            let message = `Delete group "${group.name}"?`;
+            if (tasksInGroup.length > 0) {
+                message += `\n\n${tasksInGroup.length} task(s) will be moved to Ungrouped.`;
+            }
+            
+            if (confirm(message)) {
+                // Move tasks to ungrouped
+                tasksInGroup.forEach(task => {
+                    task.groupId = null;
+                });
+                
+                // Remove group
+                data.taskGroups = data.taskGroups.filter(g => g.id !== groupId);
+                
+                saveData();
+                updateGroupSelect();
+                renderTasks();
+            }
+        }
+
+        function startEditGroupName(groupId) {
+            const group = data.taskGroups.find(g => g.id === groupId);
+            if (!group) return;
+            
+            const groupHeader = document.querySelector(`[data-group-id="${groupId}"] .group-header`);
+            const titleElement = groupHeader.querySelector('.group-title-text');
+            const actionsElement = groupHeader.querySelector('.group-actions');
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'group-title-input';
+            input.value = group.name;
+            input.setAttribute('data-group-id', groupId);
+            
+            titleElement.replaceWith(input);
+            actionsElement.style.display = 'none';
+            
+            input.focus();
+            input.select();
+            
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    saveGroupName(groupId, input.value);
+                } else if (e.key === 'Escape') {
+                    cancelEditGroupName(groupId);
+                }
+            });
+            
+            input.addEventListener('blur', () => {
+                saveGroupName(groupId, input.value);
+            });
+        }
+
+        function saveGroupName(groupId, newName) {
+            const group = data.taskGroups.find(g => g.id === groupId);
+            if (!group) return;
+            
+            const trimmedName = newName.trim();
+            if (trimmedName && trimmedName !== group.name) {
+                group.name = trimmedName;
+                saveData();
+            }
+            
+            updateGroupSelect();
+            renderTasks();
+        }
+
+        function cancelEditGroupName(groupId) {
+            renderTasks();
+        }
+
+        function updateGroupSelect() {
+            const select = document.getElementById('taskGroupSelect');
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="">Ungrouped</option>';
+            
+            data.taskGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = `${group.emoji} ${group.name}`;
+                if (group.id.toString() === currentValue) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        // Drag and Drop functionality
+        function setupDragAndDrop() {
+            const container = document.getElementById('tasksList');
+            
+            container.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('task-item')) {
+                    const taskId = parseInt(e.target.getAttribute('data-task-id'));
+                    draggedTask = data.tasks.find(t => t.id === taskId);
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+            
+            container.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('task-item')) {
+                    e.target.classList.remove('dragging');
+                    draggedTask = null;
+                }
+                
+                // Remove drag-over class from all groups
+                document.querySelectorAll('.task-group').forEach(group => {
+                    group.classList.remove('drag-over');
+                });
+            });
+            
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const group = e.target.closest('.task-group');
+                if (group && draggedTask) {
+                    e.dataTransfer.dropEffect = 'move';
+                    
+                    // Add drag-over effect
+                    document.querySelectorAll('.task-group').forEach(g => {
+                        g.classList.remove('drag-over');
+                    });
+                    group.classList.add('drag-over');
+                }
+            });
+            
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const group = e.target.closest('.task-group');
+                
+                if (group && draggedTask) {
+                    const newGroupId = group.getAttribute('data-group-id');
+                    const targetGroupId = newGroupId === 'null' ? null : parseInt(newGroupId);
+                    
+                    if (draggedTask.groupId !== targetGroupId) {
+                        draggedTask.groupId = targetGroupId;
+                        saveData();
+                        renderTasks();
+                    }
+                }
+                
+                // Remove drag-over class
+                document.querySelectorAll('.task-group').forEach(g => {
+                    g.classList.remove('drag-over');
+                });
+            });
+            
+            container.addEventListener('dragleave', (e) => {
+                const group = e.target.closest('.task-group');
+                if (group && !group.contains(e.relatedTarget)) {
+                    group.classList.remove('drag-over');
+                }
+            });
         }
 
         // Render functions
@@ -1519,47 +1974,135 @@
         function renderTasks() {
             const container = document.getElementById('tasksList');
             const showArchived = currentView.tasks === 'archived';
-            const filteredTasks = data.tasks.filter(task => task.archived === showArchived);
-            const sortedTasks = [...filteredTasks].sort((a, b) => a.completed - b.completed);
             
-            if (sortedTasks.length === 0) {
+            // Filter tasks by archive status
+            const filteredTasks = data.tasks.filter(task => task.archived === showArchived);
+            
+            if (filteredTasks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">✅</div>
-                        <p>${showArchived ? 'No archived tasks' : 'No active tasks'}</p>
+                        <p>${showArchived ? 'No archived tasks' : 'No tasks yet. Create your first task above!'}</p>
                     </div>
                 `;
                 return;
             }
             
-            container.innerHTML = sortedTasks.map(task => `
-                <div class="item-card task-item ${task.completed ? 'completed' : ''} ${task.archived ? 'archived' : ''}">
-                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
-                           onchange="toggleTask(${task.id})" ${showArchived ? 'disabled' : ''}>
-                    <div class="task-content">
-                        <div class="item-content">${escapeHtml(task.text)}</div>
-                        <div class="item-footer">
-                            <div class="item-date">
-                                ${task.completed ? 
-                                    `Completed: ${formatDate(task.completedDate)}` : 
-                                    `Created: ${formatDate(task.created)}`
-                                }
-                            </div>
-                            <div class="item-actions">
-                                <button class="action-btn" onclick="toggleArchive('tasks', ${task.id})">
-                                    ${task.archived ? 'Unarchive' : 'Archive'}
-                                </button>
-                                <button class="action-btn danger" onclick="deleteItem('tasks', ${task.id})">Delete</button>
-                            </div>
+            // Group tasks
+            const groupedTasks = {};
+            const ungroupedTasks = [];
+            
+            filteredTasks.forEach(task => {
+                if (task.groupId === null) {
+                    ungroupedTasks.push(task);
+                } else {
+                    if (!groupedTasks[task.groupId]) {
+                        groupedTasks[task.groupId] = [];
+                    }
+                    groupedTasks[task.groupId].push(task);
+                }
+            });
+            
+            let html = '';
+            
+            // Render each group
+            data.taskGroups.forEach(group => {
+                const tasksInGroup = groupedTasks[group.id] || [];
+                html += renderTaskGroup(group, tasksInGroup, showArchived);
+            });
+            
+            // Render ungrouped tasks
+            html += renderUngroupedTasks(ungroupedTasks, showArchived);
+            
+            container.innerHTML = html;
+            
+            // Setup drag and drop after rendering
+            if (!showArchived) {
+                setupDragAndDrop();
+            }
+        }
+
+        function renderTaskGroup(group, tasks, isArchived) {
+            const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
+            
+            return `
+                <div class="task-group" data-group-id="${group.id}">
+                    <div class="group-header">
+                        <div class="group-title">
+                            <span>${group.emoji}</span>
+                            <span class="group-title-text">${escapeHtml(group.name)}</span>
+                            <span class="group-count">${tasks.length}</span>
                         </div>
+                        ${!isArchived ? `
+                            <div class="group-actions">
+                                <button class="group-action-btn" onclick="startEditGroupName(${group.id})" title="Rename">✏️</button>
+                                <button class="group-action-btn" onclick="deleteGroup(${group.id})" title="Delete">🗑️</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="task-list">
+                        ${sortedTasks.length === 0 ? `
+                            <div class="empty-group">
+                                <div class="empty-icon">📭</div>
+                                <div>Drag tasks here or add new ones</div>
+                            </div>
+                        ` : sortedTasks.map(task => renderTaskItem(task, isArchived)).join('')}
                     </div>
                 </div>
-            `).join('');
+            `;
+        }
+
+        function renderUngroupedTasks(tasks, isArchived) {
+            if (tasks.length === 0 && data.taskGroups.length > 0) {
+                return '';
+            }
+            
+            const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
+            
+            return `
+                <div class="task-group no-group" data-group-id="null">
+                    <div class="group-header">
+                        <div class="group-title">
+                            <span>📋</span>
+                            <span class="group-title-text">Ungrouped</span>
+                            <span class="group-count">${tasks.length}</span>
+                        </div>
+                    </div>
+                    <div class="task-list">
+                        ${sortedTasks.length === 0 ? `
+                            <div class="empty-group">
+                                <div class="empty-icon">📭</div>
+                                <div>No ungrouped tasks</div>
+                            </div>
+                        ` : sortedTasks.map(task => renderTaskItem(task, isArchived)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTaskItem(task, isArchived) {
+            return `
+                <div class="task-item ${task.completed ? 'completed' : ''}" 
+                     draggable="${!isArchived}" 
+                     data-task-id="${task.id}">
+                    ${!isArchived ? '<span class="task-drag-handle">⋮⋮</span>' : ''}
+                    <input type="checkbox" 
+                           class="task-checkbox" 
+                           ${task.completed ? 'checked' : ''} 
+                           onchange="toggleTask(${task.id})" 
+                           ${isArchived ? 'disabled' : ''}>
+                    <div class="task-text">${escapeHtml(task.text)}</div>
+                    <div class="task-actions">
+                        <button class="task-action-btn danger" onclick="deleteTask(${task.id})">×</button>
+                    </div>
+                </div>
+            `;
         }
 
         function renderAll() {
             updateTagFilter();
             updateReportTags();
+            updateGroupSelect();
             renderNotes();
             renderReminders();
             renderTasks();
@@ -1814,7 +2357,7 @@
                     unsubscribeData();
                     unsubscribeData = null;
                 }
-                data = { notes: [], reminders: [], tasks: [] };
+                data = { notes: [], reminders: [], tasks: [], taskGroups: [] };
             }
         });
 
