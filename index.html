@@ -597,21 +597,24 @@
             min-height: 60px;
         }
 
-        .task-item {
+        .task-item-wrapper {
             background: white;
             border: 1px solid #dee2e6;
             border-radius: 8px;
             padding: 12px;
+            transition: all 0.2s;
+        }
+
+        .task-item-wrapper:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+        }
+
+        .task-item {
             display: flex;
             align-items: flex-start;
             gap: 10px;
             cursor: move;
-            transition: all 0.2s;
-        }
-
-        .task-item:hover {
-            border-color: #007bff;
-            box-shadow: 0 2px 8px rgba(0,123,255,0.15);
         }
 
         .task-item.dragging {
@@ -686,8 +689,9 @@
 
         /* Task Sub-items */
         .task-subitems {
-            margin-top: 8px;
-            margin-left: 28px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e9ecef;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -701,6 +705,7 @@
             background: #f8f9fa;
             border-radius: 4px;
             font-size: 13px;
+            margin-left: 28px;
         }
 
         .subitem.completed {
@@ -751,14 +756,14 @@
         }
 
         .add-subitem-btn {
-            margin-top: 4px;
+            margin-top: 8px;
             margin-left: 28px;
-            padding: 4px 8px;
-            background: #e3f2fd;
-            border: 1px dashed #007bff;
+            padding: 6px 10px;
+            background: transparent;
+            border: 1px dashed #adb5bd;
             border-radius: 4px;
             font-size: 11px;
-            color: #007bff;
+            color: #6c757d;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
@@ -767,8 +772,9 @@
         }
 
         .add-subitem-btn:hover {
-            background: #007bff;
-            color: white;
+            border-color: #007bff;
+            color: #007bff;
+            background: #f8f9fa;
         }
 
         .task-progress {
@@ -779,8 +785,8 @@
         }
 
         .add-subitem-input {
+            margin-top: 8px;
             margin-left: 28px;
-            margin-top: 4px;
             display: flex;
             gap: 6px;
         }
@@ -1248,12 +1254,24 @@
                             <button class="toggle-btn" onclick="toggleNotesView('archived')" id="notesArchivedBtn">Archived</button>
                         </div>
                         
-                        <div id="tagFilterContainer" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <span style="font-size: 14px; font-weight: 500; color: #495057;">Filter by tags:</span>
-                            <div id="tagFilterOptions" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                <!-- Tag filter buttons will be rendered here -->
+                        <div id="tagFilterContainer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <button onclick="toggleTagFilterPanel()" class="secondary-btn" id="tagFilterToggle" style="display: flex; align-items: center; gap: 6px;">
+                                <span>🏷️</span>
+                                <span id="tagFilterLabel">Filter by tags</span>
+                                <span id="tagFilterCount" style="display: none; background: #007bff; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 4px;"></span>
+                            </button>
+                            <div id="tagFilterPanel" class="hidden" style="position: absolute; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; max-width: 600px; margin-top: 8px;">
+                                <div style="margin-bottom: 12px; font-weight: 600; color: #2c3e50; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Select tags to filter:</span>
+                                    <button onclick="toggleTagFilterPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d;">&times;</button>
+                                </div>
+                                <div id="tagFilterOptions" style="display: flex; gap: 6px; flex-wrap: wrap; max-height: 200px; overflow-y: auto;">
+                                    <!-- Tag filter buttons will be rendered here -->
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e9ecef; display: flex; gap: 8px; justify-content: flex-end;">
+                                    <button onclick="clearTagFilters()" class="secondary-btn" style="font-size: 11px; padding: 6px 12px;">Clear All</button>
+                                </div>
                             </div>
-                            <button onclick="clearTagFilters()" class="secondary-btn" style="font-size: 11px; padding: 6px 12px;">Clear Filters</button>
                         </div>
                         
                         <button onclick="archiveOldNotes()" class="secondary-btn">Archive Old Notes</button>
@@ -1462,6 +1480,7 @@
         window.toggleNoteTag = toggleNoteTag;
         window.clearTagFilters = clearTagFilters;
         window.toggleFilterMode = toggleFilterMode;
+        window.toggleTagFilterPanel = toggleTagFilterPanel;
         window.addSubItem = addSubItem;
         window.toggleSubItem = toggleSubItem;
         window.deleteSubItem = deleteSubItem;
@@ -1720,8 +1739,8 @@
             // Hide any existing inputs
             document.querySelectorAll('.add-subitem-input').forEach(input => input.remove());
             
-            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-            const existingInput = taskElement.querySelector('.add-subitem-input');
+            const taskWrapper = document.querySelector(`[data-task-id="${taskId}"]`);
+            const existingInput = taskWrapper.querySelector('.add-subitem-input');
             if (existingInput) return;
             
             const inputHtml = `
@@ -1732,14 +1751,24 @@
                 </div>
             `;
             
-            taskElement.insertAdjacentHTML('beforeend', inputHtml);
-            document.getElementById(`subitem-input-${taskId}`).focus();
+            // Insert before the add button if it exists, otherwise at the end
+            const addButton = taskWrapper.querySelector('.add-subitem-btn');
+            if (addButton) {
+                addButton.insertAdjacentHTML('beforebegin', inputHtml);
+            } else {
+                taskWrapper.insertAdjacentHTML('beforeend', inputHtml);
+            }
             
-            // Allow Enter key to save
-            document.getElementById(`subitem-input-${taskId}`).addEventListener('keypress', (e) => {
+            const input = document.getElementById(`subitem-input-${taskId}`);
+            input.focus();
+            
+            // Allow Enter key to save, Escape to cancel
+            input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     saveSubItem(taskId);
                 } else if (e.key === 'Escape') {
+                    e.preventDefault();
                     cancelAddSubItem(taskId);
                 }
             });
@@ -1757,8 +1786,8 @@
         }
         
         function cancelAddSubItem(taskId) {
-            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-            const input = taskElement.querySelector('.add-subitem-input');
+            const taskWrapper = document.querySelector(`[data-task-id="${taskId}"]`);
+            const input = taskWrapper.querySelector('.add-subitem-input');
             if (input) {
                 input.remove();
             }
@@ -2044,17 +2073,19 @@
             const container = document.getElementById('tasksList');
             
             container.addEventListener('dragstart', (e) => {
-                if (e.target.classList.contains('task-item')) {
-                    const taskId = parseInt(e.target.getAttribute('data-task-id'));
+                const wrapper = e.target.closest('.task-item-wrapper');
+                if (wrapper && wrapper.draggable) {
+                    const taskId = parseInt(wrapper.getAttribute('data-task-id'));
                     draggedTask = data.tasks.find(t => t.id === taskId);
-                    e.target.classList.add('dragging');
+                    wrapper.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                 }
             });
             
             container.addEventListener('dragend', (e) => {
-                if (e.target.classList.contains('task-item')) {
-                    e.target.classList.remove('dragging');
+                const wrapper = e.target.closest('.task-item-wrapper');
+                if (wrapper) {
+                    wrapper.classList.remove('dragging');
                     draggedTask = null;
                 }
                 
@@ -2353,27 +2384,33 @@
                 `;
             }
             
+            // Only show add button if there are already sub-items or if adding via input
+            const addButtonHtml = !isArchived && subItems.length > 0 ? `
+                <button class="add-subitem-btn" onclick="showAddSubItemInput(${task.id})">
+                    <span>+</span> Add sub-item
+                </button>
+            ` : '';
+            
             return `
-                <div class="task-item ${task.completed ? 'completed' : ''}" 
-                     draggable="${!isArchived}" 
-                     data-task-id="${task.id}">
-                    ${!isArchived ? '<span class="task-drag-handle">⋮⋮</span>' : ''}
-                    <input type="checkbox" 
-                           class="task-checkbox" 
-                           ${task.completed ? 'checked' : ''} 
-                           onchange="toggleTask(${task.id})" 
-                           ${isArchived ? 'disabled' : ''}>
-                    <div class="task-text">${escapeHtml(task.text)}${progressText}</div>
-                    <div class="task-actions">
-                        <button class="task-action-btn danger" onclick="deleteTask(${task.id})">×</button>
+                <div class="task-item-wrapper" draggable="${!isArchived}" data-task-id="${task.id}">
+                    <div class="task-item ${task.completed ? 'completed' : ''}">
+                        ${!isArchived ? '<span class="task-drag-handle">⋮⋮</span>' : ''}
+                        <input type="checkbox" 
+                               class="task-checkbox" 
+                               ${task.completed ? 'checked' : ''} 
+                               onchange="toggleTask(${task.id})" 
+                               ${isArchived ? 'disabled' : ''}>
+                        <div class="task-text">${escapeHtml(task.text)}${progressText}</div>
+                        <div class="task-actions">
+                            ${!isArchived && subItems.length === 0 ? `
+                                <button class="task-action-btn" onclick="showAddSubItemInput(${task.id})" title="Add sub-item">+</button>
+                            ` : ''}
+                            <button class="task-action-btn danger" onclick="deleteTask(${task.id})">×</button>
+                        </div>
                     </div>
+                    ${subItemsHtml}
+                    ${addButtonHtml}
                 </div>
-                ${subItemsHtml}
-                ${!isArchived ? `
-                    <button class="add-subitem-btn" onclick="showAddSubItemInput(${task.id})">
-                        <span>+</span> Add sub-item
-                    </button>
-                ` : ''}
             `;
         }
 
@@ -2388,6 +2425,8 @@
 
         function renderTagFilters() {
             const container = document.getElementById('tagFilterOptions');
+            const filterLabel = document.getElementById('tagFilterLabel');
+            const filterCount = document.getElementById('tagFilterCount');
             
             const allTags = new Set();
             data.notes.forEach(note => {
@@ -2395,6 +2434,16 @@
                     note.tags.forEach(tag => allTags.add(tag));
                 }
             });
+            
+            // Update button label and count
+            if (selectedNoteTags.size > 0) {
+                filterLabel.textContent = `Filtering by ${selectedNoteTags.size} tag${selectedNoteTags.size > 1 ? 's' : ''}`;
+                filterCount.textContent = selectedNoteTags.size;
+                filterCount.style.display = 'inline-block';
+            } else {
+                filterLabel.textContent = 'Filter by tags';
+                filterCount.style.display = 'none';
+            }
             
             if (allTags.size === 0) {
                 container.innerHTML = '<span style="color: #6c757d; font-size: 12px;">No tags available</span>';
@@ -2409,16 +2458,23 @@
                 </button>
             `).join('');
             
-            // Add AND/OR toggle if tags are selected
+            // Add AND/OR toggle if multiple tags are selected
             if (selectedNoteTags.size > 1) {
                 const modeToggle = document.createElement('button');
                 modeToggle.className = 'secondary-btn';
                 modeToggle.style.fontSize = '11px';
                 modeToggle.style.padding = '6px 12px';
-                modeToggle.textContent = noteFilterMode === 'OR' ? 'Match ANY' : 'Match ALL';
+                modeToggle.style.marginTop = '8px';
+                modeToggle.style.width = '100%';
+                modeToggle.textContent = noteFilterMode === 'OR' ? 'Mode: Match ANY tag' : 'Mode: Match ALL tags';
                 modeToggle.onclick = toggleFilterMode;
                 container.appendChild(modeToggle);
             }
+        }
+        
+        function toggleTagFilterPanel() {
+            const panel = document.getElementById('tagFilterPanel');
+            panel.classList.toggle('hidden');
         }
         
         function toggleNoteTag(tag) {
@@ -2435,6 +2491,7 @@
             selectedNoteTags.clear();
             renderTagFilters();
             renderNotes();
+            toggleTagFilterPanel(); // Close the panel after clearing
         }
         
         function toggleFilterMode() {
@@ -2711,6 +2768,18 @@
             document.getElementById('reportsModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeReportsModal();
+                }
+            });
+            
+            // Close tag filter panel when clicking outside
+            document.addEventListener('click', function(e) {
+                const panel = document.getElementById('tagFilterPanel');
+                const toggle = document.getElementById('tagFilterToggle');
+                
+                if (!panel.classList.contains('hidden') && 
+                    !panel.contains(e.target) && 
+                    !toggle.contains(e.target)) {
+                    toggleTagFilterPanel();
                 }
             });
         });
