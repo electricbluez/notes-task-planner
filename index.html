@@ -518,6 +518,26 @@
             border-color: #ffc107;
         }
 
+        .task-group.today-group {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border: 2px solid #007bff;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+            order: -1; /* Always appears first */
+        }
+
+        .task-group.today-group .group-header {
+            border-bottom-color: #007bff;
+        }
+
+        .task-group.today-group .group-title {
+            color: #007bff;
+            font-size: 17px;
+        }
+
+        .task-group.today-group .group-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
         .group-header {
             display: flex;
             align-items: center;
@@ -1446,6 +1466,9 @@
         // Note filtering state
         let selectedNoteTags = new Set();
         let noteFilterMode = 'OR'; // 'OR' or 'AND'
+        
+        // Today's date (resets at midnight)
+        let todayDate = new Date().toDateString();
 
         // Make functions global for onclick handlers
         window.signIn = signIn;
@@ -1487,6 +1510,7 @@
         window.showAddSubItemInput = showAddSubItemInput;
         window.saveSubItem = saveSubItem;
         window.cancelAddSubItem = cancelAddSubItem;
+        window.toggleTaskToday = toggleTaskToday;
 
         // Authentication functions
         async function signIn() {
@@ -1588,7 +1612,20 @@
                     task.groupId = null;
                     needsSave = true;
                 }
+                // Add isToday property if missing
+                if (!task.hasOwnProperty('isToday')) {
+                    task.isToday = false;
+                    needsSave = true;
+                }
+                // Add todayDate property if missing (tracks when it was added to Today)
+                if (!task.hasOwnProperty('todayDate')) {
+                    task.todayDate = null;
+                    needsSave = true;
+                }
             });
+            
+            // Clear today status for tasks that were marked for a previous day
+            checkAndClearOldTodayTasks();
             
             // Ensure taskGroups array exists
             if (!data.taskGroups) {
@@ -1599,6 +1636,34 @@
             if (needsSave) {
                 saveData();
             }
+        }
+        
+        function checkAndClearOldTodayTasks() {
+            const currentDateString = new Date().toDateString();
+            let needsSave = false;
+            
+            data.tasks.forEach(task => {
+                if (task.isToday && task.todayDate !== currentDateString) {
+                    task.isToday = false;
+                    task.todayDate = null;
+                    needsSave = true;
+                }
+            });
+            
+            if (needsSave) {
+                saveData();
+            }
+        }
+        
+        function toggleTaskToday(taskId) {
+            const task = data.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            task.isToday = !task.isToday;
+            task.todayDate = task.isToday ? new Date().toDateString() : null;
+            
+            saveData();
+            renderTasks();
         }
 
         function setupRealtimeSync() {
@@ -2114,14 +2179,24 @@
                 const group = e.target.closest('.task-group');
                 
                 if (group && draggedTask) {
-                    const newGroupId = group.getAttribute('data-group-id');
-                    const targetGroupId = newGroupId === 'null' ? null : parseInt(newGroupId);
+                    const groupIdAttr = group.getAttribute('data-group-id');
                     
-                    if (draggedTask.groupId !== targetGroupId) {
+                    // Handle Today bucket specially
+                    if (groupIdAttr === 'today') {
+                        draggedTask.isToday = true;
+                        draggedTask.todayDate = new Date().toDateString();
+                    } else {
+                        // Moving out of Today or between regular groups
+                        draggedTask.isToday = false;
+                        draggedTask.todayDate = null;
+                        
+                        // Set the group
+                        const targetGroupId = groupIdAttr === 'null' ? null : parseInt(groupIdAttr);
                         draggedTask.groupId = targetGroupId;
-                        saveData();
-                        renderTasks();
                     }
+                    
+                    saveData();
+                    renderTasks();
                 }
                 
                 // Remove drag-over class
@@ -2251,6 +2326,9 @@
             const container = document.getElementById('tasksList');
             const showArchived = currentView.tasks === 'archived';
             
+            // Check if it's a new day and clear old Today tasks
+            checkAndClearOldTodayTasks();
+            
             // Filter tasks by archive status
             const filteredTasks = data.tasks.filter(task => task.archived === showArchived);
             
@@ -2264,11 +2342,15 @@
                 return;
             }
             
-            // Group tasks
+            // Separate Today tasks from others
+            const todayTasks = filteredTasks.filter(task => task.isToday);
+            const otherTasks = filteredTasks.filter(task => !task.isToday);
+            
+            // Group other tasks
             const groupedTasks = {};
             const ungroupedTasks = [];
             
-            filteredTasks.forEach(task => {
+            otherTasks.forEach(task => {
                 if (task.groupId === null) {
                     ungroupedTasks.push(task);
                 } else {
@@ -2281,7 +2363,12 @@
             
             let html = '';
             
-            // Render each group
+            // Render Today bucket first (only if not archived view)
+            if (!showArchived) {
+                html += renderTodayBucket(todayTasks);
+            }
+            
+            // Render each regular group
             data.taskGroups.forEach(group => {
                 const tasksInGroup = groupedTasks[group.id] || [];
                 html += renderTaskGroup(group, tasksInGroup, showArchived);
@@ -2297,66 +2384,32 @@
                 setupDragAndDrop();
             }
         }
-
-        function renderTaskGroup(group, tasks, isArchived) {
+        
+        function renderTodayBucket(tasks) {
             const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
             
             return `
-                <div class="task-group" data-group-id="${group.id}">
+                <div class="task-group today-group" data-group-id="today">
                     <div class="group-header">
                         <div class="group-title">
-                            <span>${group.emoji}</span>
-                            <span class="group-title-text">${escapeHtml(group.name)}</span>
-                            <span class="group-count">${tasks.length}</span>
-                        </div>
-                        ${!isArchived ? `
-                            <div class="group-actions">
-                                <button class="group-action-btn" onclick="startEditGroupName(${group.id})" title="Rename">✏️</button>
-                                <button class="group-action-btn" onclick="deleteGroup(${group.id})" title="Delete">🗑️</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="task-list">
-                        ${sortedTasks.length === 0 ? `
-                            <div class="empty-group">
-                                <div class="empty-icon">📭</div>
-                                <div>Drag tasks here or add new ones</div>
-                            </div>
-                        ` : sortedTasks.map(task => renderTaskItem(task, isArchived)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderUngroupedTasks(tasks, isArchived) {
-            if (tasks.length === 0 && data.taskGroups.length > 0) {
-                return '';
-            }
-            
-            const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
-            
-            return `
-                <div class="task-group no-group" data-group-id="null">
-                    <div class="group-header">
-                        <div class="group-title">
-                            <span>📋</span>
-                            <span class="group-title-text">Ungrouped</span>
+                            <span>📅</span>
+                            <span class="group-title-text">Today</span>
                             <span class="group-count">${tasks.length}</span>
                         </div>
                     </div>
                     <div class="task-list">
                         ${sortedTasks.length === 0 ? `
                             <div class="empty-group">
-                                <div class="empty-icon">📭</div>
-                                <div>No ungrouped tasks</div>
+                                <div class="empty-icon">📌</div>
+                                <div>Drag tasks here to work on them today</div>
                             </div>
-                        ` : sortedTasks.map(task => renderTaskItem(task, isArchived)).join('')}
+                        ` : sortedTasks.map(task => renderTaskItemWithTodayToggle(task, false)).join('')}
                     </div>
                 </div>
             `;
         }
-
-        function renderTaskItem(task, isArchived) {
+        
+        function renderTaskItemWithTodayToggle(task, isArchived) {
             const subItems = task.subItems || [];
             const completedSubItems = subItems.filter(si => si.completed).length;
             const progressText = subItems.length > 0 ? `<span class="task-progress">(${completedSubItems}/${subItems.length})</span>` : '';
@@ -2384,10 +2437,15 @@
                 `;
             }
             
-            // Only show add button if there are already sub-items or if adding via input
             const addButtonHtml = !isArchived && subItems.length > 0 ? `
                 <button class="add-subitem-btn" onclick="showAddSubItemInput(${task.id})">
                     <span>+</span> Add sub-item
+                </button>
+            ` : '';
+            
+            const todayToggleButton = !isArchived ? `
+                <button class="task-action-btn" onclick="toggleTaskToday(${task.id})" title="${task.isToday ? 'Remove from Today' : 'Add to Today'}" style="font-size: 13px;">
+                    ${task.isToday ? '📅✓' : '📅'}
                 </button>
             ` : '';
             
@@ -2402,6 +2460,7 @@
                                ${isArchived ? 'disabled' : ''}>
                         <div class="task-text">${escapeHtml(task.text)}${progressText}</div>
                         <div class="task-actions">
+                            ${todayToggleButton}
                             ${!isArchived && subItems.length === 0 ? `
                                 <button class="task-action-btn" onclick="showAddSubItemInput(${task.id})" title="Add sub-item">+</button>
                             ` : ''}
@@ -2412,6 +2471,69 @@
                     ${addButtonHtml}
                 </div>
             `;
+        }
+
+        function renderTaskGroup(group, tasks, isArchived) {
+            const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
+            
+            return `
+                <div class="task-group" data-group-id="${group.id}">
+                    <div class="group-header">
+                        <div class="group-title">
+                            <span>${group.emoji}</span>
+                            <span class="group-title-text">${escapeHtml(group.name)}</span>
+                            <span class="group-count">${tasks.length}</span>
+                        </div>
+                        ${!isArchived ? `
+                            <div class="group-actions">
+                                <button class="group-action-btn" onclick="startEditGroupName(${group.id})" title="Rename">✏️</button>
+                                <button class="group-action-btn" onclick="deleteGroup(${group.id})" title="Delete">🗑️</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="task-list">
+                        ${sortedTasks.length === 0 ? `
+                            <div class="empty-group">
+                                <div class="empty-icon">📭</div>
+                                <div>Drag tasks here or add new ones</div>
+                            </div>
+                        ` : sortedTasks.map(task => renderTaskItemWithTodayToggle(task, isArchived)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderUngroupedTasks(tasks, isArchived) {
+            if (tasks.length === 0 && data.taskGroups.length > 0) {
+                return '';
+            }
+            
+            const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
+            
+            return `
+                <div class="task-group no-group" data-group-id="null">
+                    <div class="group-header">
+                        <div class="group-title">
+                            <span>📋</span>
+                            <span class="group-title-text">Ungrouped</span>
+                            <span class="group-count">${tasks.length}</span>
+                        </div>
+                    </div>
+                    <div class="task-list">
+                        ${sortedTasks.length === 0 ? `
+                            <div class="empty-group">
+                                <div class="empty-icon">📭</div>
+                                <div>No ungrouped tasks</div>
+                            </div>
+                        ` : sortedTasks.map(task => renderTaskItemWithTodayToggle(task, isArchived)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTaskItem(task, isArchived) {
+            // Keep the old function for backward compatibility if needed
+            return renderTaskItemWithTodayToggle(task, isArchived);
         }
 
         function renderAll() {
