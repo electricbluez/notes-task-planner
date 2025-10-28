@@ -684,6 +684,133 @@
             border-color: #dc3545;
         }
 
+        /* Task Sub-items */
+        .task-subitems {
+            margin-top: 8px;
+            margin-left: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .subitem {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .subitem.completed {
+            opacity: 0.6;
+        }
+
+        .subitem.completed .subitem-text {
+            text-decoration: line-through;
+        }
+
+        .subitem-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .subitem-text {
+            flex: 1;
+            word-wrap: break-word;
+        }
+
+        .subitem-actions {
+            display: flex;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .subitem:hover .subitem-actions {
+            opacity: 1;
+        }
+
+        .subitem-btn {
+            padding: 2px 4px;
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .subitem-btn:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .add-subitem-btn {
+            margin-top: 4px;
+            margin-left: 28px;
+            padding: 4px 8px;
+            background: #e3f2fd;
+            border: 1px dashed #007bff;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #007bff;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .add-subitem-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        .task-progress {
+            font-size: 11px;
+            color: #6c757d;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+
+        .add-subitem-input {
+            margin-left: 28px;
+            margin-top: 4px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .add-subitem-input input {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .add-subitem-input button {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .add-subitem-input .save-subitem {
+            background: #28a745;
+            color: white;
+        }
+
+        .add-subitem-input .cancel-subitem {
+            background: #6c757d;
+            color: white;
+        }
+
         .empty-group {
             text-align: center;
             padding: 32px 16px;
@@ -1121,9 +1248,13 @@
                             <button class="toggle-btn" onclick="toggleNotesView('archived')" id="notesArchivedBtn">Archived</button>
                         </div>
                         
-                        <select id="tagFilter" class="filter-select" onchange="renderNotes()">
-                            <option value="">All tags</option>
-                        </select>
+                        <div id="tagFilterContainer" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <span style="font-size: 14px; font-weight: 500; color: #495057;">Filter by tags:</span>
+                            <div id="tagFilterOptions" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <!-- Tag filter buttons will be rendered here -->
+                            </div>
+                            <button onclick="clearTagFilters()" class="secondary-btn" style="font-size: 11px; padding: 6px 12px;">Clear Filters</button>
+                        </div>
                         
                         <button onclick="archiveOldNotes()" class="secondary-btn">Archive Old Notes</button>
                     </div>
@@ -1293,6 +1424,10 @@
 
         // Report filtering state
         let reportTags = new Set();
+        
+        // Note filtering state
+        let selectedNoteTags = new Set();
+        let noteFilterMode = 'OR'; // 'OR' or 'AND'
 
         // Make functions global for onclick handlers
         window.signIn = signIn;
@@ -1324,6 +1459,15 @@
         window.startEditGroupName = startEditGroupName;
         window.saveGroupName = saveGroupName;
         window.cancelEditGroupName = cancelEditGroupName;
+        window.toggleNoteTag = toggleNoteTag;
+        window.clearTagFilters = clearTagFilters;
+        window.toggleFilterMode = toggleFilterMode;
+        window.addSubItem = addSubItem;
+        window.toggleSubItem = toggleSubItem;
+        window.deleteSubItem = deleteSubItem;
+        window.showAddSubItemInput = showAddSubItemInput;
+        window.saveSubItem = saveSubItem;
+        window.cancelAddSubItem = cancelAddSubItem;
 
         // Authentication functions
         async function signIn() {
@@ -1492,7 +1636,7 @@
                 input.value = '';
                 tagsInput.value = '';
                 saveData();
-                updateTagFilter();
+                renderTagFilters();
                 renderNotes();
             }
         }
@@ -1571,6 +1715,95 @@
             renderTasks();
         }
 
+        // Sub-item functions
+        function showAddSubItemInput(taskId) {
+            // Hide any existing inputs
+            document.querySelectorAll('.add-subitem-input').forEach(input => input.remove());
+            
+            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+            const existingInput = taskElement.querySelector('.add-subitem-input');
+            if (existingInput) return;
+            
+            const inputHtml = `
+                <div class="add-subitem-input">
+                    <input type="text" placeholder="Enter sub-item..." id="subitem-input-${taskId}">
+                    <button class="save-subitem" onclick="saveSubItem(${taskId})">Add</button>
+                    <button class="cancel-subitem" onclick="cancelAddSubItem(${taskId})">✕</button>
+                </div>
+            `;
+            
+            taskElement.insertAdjacentHTML('beforeend', inputHtml);
+            document.getElementById(`subitem-input-${taskId}`).focus();
+            
+            // Allow Enter key to save
+            document.getElementById(`subitem-input-${taskId}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    saveSubItem(taskId);
+                } else if (e.key === 'Escape') {
+                    cancelAddSubItem(taskId);
+                }
+            });
+        }
+        
+        function saveSubItem(taskId) {
+            const input = document.getElementById(`subitem-input-${taskId}`);
+            const text = input.value.trim();
+            
+            if (text) {
+                addSubItem(taskId, text);
+            }
+            
+            cancelAddSubItem(taskId);
+        }
+        
+        function cancelAddSubItem(taskId) {
+            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+            const input = taskElement.querySelector('.add-subitem-input');
+            if (input) {
+                input.remove();
+            }
+        }
+
+        function addSubItem(taskId, text) {
+            const task = data.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            if (!task.subItems) {
+                task.subItems = [];
+            }
+            
+            task.subItems.push({
+                id: Date.now(),
+                text: text,
+                completed: false,
+                created: new Date().toISOString()
+            });
+            
+            saveData();
+            renderTasks();
+        }
+
+        function toggleSubItem(taskId, subItemId) {
+            const task = data.tasks.find(t => t.id === taskId);
+            if (!task || !task.subItems) return;
+            
+            const subItem = task.subItems.find(si => si.id === subItemId);
+            if (subItem) {
+                subItem.completed = !subItem.completed;
+                saveData();
+                renderTasks();
+            }
+        }
+
+        function deleteSubItem(taskId, subItemId) {
+            const task = data.tasks.find(t => t.id === taskId);
+            if (!task || !task.subItems) return;
+            
+            task.subItems = task.subItems.filter(si => si.id !== subItemId);
+            saveData();
+            renderTasks();
+        }
+
         function editNote(id) {
             const note = data.notes.find(n => n.id === id);
             if (!note || note.archived) return;
@@ -1625,7 +1858,7 @@
                 note.lastModified = new Date().toISOString();
                 
                 saveData();
-                updateTagFilter();
+                renderTagFilters();
                 renderNotes();
             } else {
                 alert('Note content cannot be empty');
@@ -1878,18 +2111,30 @@
         function renderNotes() {
             const container = document.getElementById('notesList');
             const showArchived = currentView.notes === 'archived';
-            const selectedTag = document.getElementById('tagFilter').value;
             
             let filteredNotes = data.notes.filter(note => note.archived === showArchived);
             
-            if (selectedTag) {
-                filteredNotes = filteredNotes.filter(note => 
-                    note.tags && note.tags.includes(selectedTag)
-                );
+            // Apply tag filtering
+            if (selectedNoteTags.size > 0) {
+                filteredNotes = filteredNotes.filter(note => {
+                    if (!note.tags || note.tags.length === 0) return false;
+                    
+                    if (noteFilterMode === 'OR') {
+                        // Note must have at least one of the selected tags
+                        return Array.from(selectedNoteTags).some(tag => note.tags.includes(tag));
+                    } else {
+                        // Note must have all selected tags
+                        return Array.from(selectedNoteTags).every(tag => note.tags.includes(tag));
+                    }
+                });
             }
             
             if (filteredNotes.length === 0) {
-                const filterText = selectedTag ? ` with tag "${selectedTag}"` : '';
+                let filterText = '';
+                if (selectedNoteTags.size > 0) {
+                    const tagsText = Array.from(selectedNoteTags).join(', ');
+                    filterText = ` with tag${selectedNoteTags.size > 1 ? 's' : ''} "${tagsText}"`;
+                }
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📝</div>
@@ -2081,6 +2326,33 @@
         }
 
         function renderTaskItem(task, isArchived) {
+            const subItems = task.subItems || [];
+            const completedSubItems = subItems.filter(si => si.completed).length;
+            const progressText = subItems.length > 0 ? `<span class="task-progress">(${completedSubItems}/${subItems.length})</span>` : '';
+            
+            let subItemsHtml = '';
+            if (subItems.length > 0) {
+                subItemsHtml = `
+                    <div class="task-subitems">
+                        ${subItems.map(subItem => `
+                            <div class="subitem ${subItem.completed ? 'completed' : ''}">
+                                <input type="checkbox" 
+                                       class="subitem-checkbox" 
+                                       ${subItem.completed ? 'checked' : ''} 
+                                       onchange="toggleSubItem(${task.id}, ${subItem.id})"
+                                       ${isArchived ? 'disabled' : ''}>
+                                <span class="subitem-text">${escapeHtml(subItem.text)}</span>
+                                ${!isArchived ? `
+                                    <div class="subitem-actions">
+                                        <button class="subitem-btn" onclick="deleteSubItem(${task.id}, ${subItem.id})">×</button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
             return `
                 <div class="task-item ${task.completed ? 'completed' : ''}" 
                      draggable="${!isArchived}" 
@@ -2091,16 +2363,22 @@
                            ${task.completed ? 'checked' : ''} 
                            onchange="toggleTask(${task.id})" 
                            ${isArchived ? 'disabled' : ''}>
-                    <div class="task-text">${escapeHtml(task.text)}</div>
+                    <div class="task-text">${escapeHtml(task.text)}${progressText}</div>
                     <div class="task-actions">
                         <button class="task-action-btn danger" onclick="deleteTask(${task.id})">×</button>
                     </div>
                 </div>
+                ${subItemsHtml}
+                ${!isArchived ? `
+                    <button class="add-subitem-btn" onclick="showAddSubItemInput(${task.id})">
+                        <span>+</span> Add sub-item
+                    </button>
+                ` : ''}
             `;
         }
 
         function renderAll() {
-            updateTagFilter();
+            renderTagFilters();
             updateReportTags();
             updateGroupSelect();
             renderNotes();
@@ -2108,9 +2386,8 @@
             renderTasks();
         }
 
-        function updateTagFilter() {
-            const tagFilter = document.getElementById('tagFilter');
-            const currentValue = tagFilter.value;
+        function renderTagFilters() {
+            const container = document.getElementById('tagFilterOptions');
             
             const allTags = new Set();
             data.notes.forEach(note => {
@@ -2119,16 +2396,56 @@
                 }
             });
             
-            tagFilter.innerHTML = '<option value="">All tags</option>';
-            Array.from(allTags).sort().forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag;
-                option.textContent = tag;
-                if (tag === currentValue) {
-                    option.selected = true;
-                }
-                tagFilter.appendChild(option);
-            });
+            if (allTags.size === 0) {
+                container.innerHTML = '<span style="color: #6c757d; font-size: 12px;">No tags available</span>';
+                return;
+            }
+            
+            const tagsArray = Array.from(allTags).sort();
+            container.innerHTML = tagsArray.map(tag => `
+                <button class="filter-tag ${selectedNoteTags.has(tag) ? 'selected' : ''}" 
+                        onclick="toggleNoteTag('${escapeHtml(tag).replace(/'/g, "\\'")}')">
+                    ${escapeHtml(tag)}
+                </button>
+            `).join('');
+            
+            // Add AND/OR toggle if tags are selected
+            if (selectedNoteTags.size > 1) {
+                const modeToggle = document.createElement('button');
+                modeToggle.className = 'secondary-btn';
+                modeToggle.style.fontSize = '11px';
+                modeToggle.style.padding = '6px 12px';
+                modeToggle.textContent = noteFilterMode === 'OR' ? 'Match ANY' : 'Match ALL';
+                modeToggle.onclick = toggleFilterMode;
+                container.appendChild(modeToggle);
+            }
+        }
+        
+        function toggleNoteTag(tag) {
+            if (selectedNoteTags.has(tag)) {
+                selectedNoteTags.delete(tag);
+            } else {
+                selectedNoteTags.add(tag);
+            }
+            renderTagFilters();
+            renderNotes();
+        }
+        
+        function clearTagFilters() {
+            selectedNoteTags.clear();
+            renderTagFilters();
+            renderNotes();
+        }
+        
+        function toggleFilterMode() {
+            noteFilterMode = noteFilterMode === 'OR' ? 'AND' : 'OR';
+            renderTagFilters();
+            renderNotes();
+        }
+
+        function updateTagFilter() {
+            // Legacy function - replaced by renderTagFilters
+            renderTagFilters();
         }
 
         // Reports functionality
