@@ -1445,6 +1445,8 @@
         let unsubscribeData = null;
         let currentTab = 'notes';
         let draggedTask = null;
+        let autoScrollInterval = null;
+        let scrollSpeed = 0;
         
         // Data storage
         let data = {
@@ -2154,6 +2156,9 @@
                     draggedTask = null;
                 }
                 
+                // Stop auto-scrolling
+                stopAutoScroll();
+                
                 // Remove drag-over class from all groups
                 document.querySelectorAll('.task-group').forEach(group => {
                     group.classList.remove('drag-over');
@@ -2199,6 +2204,9 @@
                     renderTasks();
                 }
                 
+                // Stop auto-scrolling
+                stopAutoScroll();
+                
                 // Remove drag-over class
                 document.querySelectorAll('.task-group').forEach(g => {
                     g.classList.remove('drag-over');
@@ -2211,6 +2219,50 @@
                     group.classList.remove('drag-over');
                 }
             });
+            
+            // Add global drag tracking for auto-scroll
+            document.addEventListener('drag', handleAutoScroll);
+        }
+        
+        function handleAutoScroll(e) {
+            if (!draggedTask) return;
+            
+            const scrollZone = 100; // pixels from edge to trigger scroll
+            const maxScrollSpeed = 15; // pixels per frame
+            const viewportHeight = window.innerHeight;
+            const mouseY = e.clientY;
+            
+            // Check if we're near the top or bottom of the viewport
+            if (mouseY > 0 && mouseY < scrollZone) {
+                // Near top - scroll up
+                const distance = scrollZone - mouseY;
+                scrollSpeed = -Math.min((distance / scrollZone) * maxScrollSpeed, maxScrollSpeed);
+                startAutoScroll();
+            } else if (mouseY > viewportHeight - scrollZone && mouseY < viewportHeight) {
+                // Near bottom - scroll down
+                const distance = mouseY - (viewportHeight - scrollZone);
+                scrollSpeed = Math.min((distance / scrollZone) * maxScrollSpeed, maxScrollSpeed);
+                startAutoScroll();
+            } else {
+                // Not in scroll zone
+                stopAutoScroll();
+            }
+        }
+        
+        function startAutoScroll() {
+            if (autoScrollInterval) return; // Already scrolling
+            
+            autoScrollInterval = setInterval(() => {
+                window.scrollBy(0, scrollSpeed);
+            }, 16); // ~60fps
+        }
+        
+        function stopAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+                scrollSpeed = 0;
+            }
         }
 
         // Render functions
